@@ -175,13 +175,6 @@
       background: rgba(219, 234, 254, 0.35);
     }
 
-    .stack-label {
-      font-size: 0.72rem;
-      color: #1d4ed8;
-      font-weight: 700;
-      margin-bottom: 2px;
-    }
-
     .item {
       width: 42px;
       height: 42px;
@@ -660,11 +653,6 @@
         const stack = document.createElement('div');
         stack.className = 'stack-col';
 
-        const stackLabel = document.createElement('div');
-        stackLabel.className = 'stack-label';
-        stackLabel.textContent = `x${stackIndex + 1}`;
-        stack.appendChild(stackLabel);
-
         for (let i = 0; i < wholePerStack; i++) {
           stack.appendChild(makeItem('weight', isNegative ? '-1' : '1', isNegative));
         }
@@ -673,7 +661,7 @@
           const frac = reduceFraction(remainder, n);
           const fillRatio = remainder / n;
           stack.appendChild(
-            makeItem('weight', isNegative ? '-1' : '1', isNegative, `${frac.numerator}/${frac.denominator}`, fillRatio)
+            makeItem('weight', '', isNegative, `${frac.numerator}/${frac.denominator}`, fillRatio)
           );
         }
 
