@@ -6,20 +6,14 @@
   <title>Inequality Scale Explorer</title>
   <style>
     :root {
-      --bg: #f7f8fc;
       --panel: #ffffff;
       --line: #d8dced;
       --text: #1f2937;
       --muted: #6b7280;
       --accent: #2563eb;
-      --accent-soft: #dbeafe;
       --weight: #f59e0b;
       --xbox: #8b5cf6;
       --platform: #94a3b8;
-      --platform-edge: #64748b;
-      --rope: #94a3b8;
-      --pivot: #111827;
-      --glow: rgba(37, 99, 235, 0.18);
     }
 
     * { box-sizing: border-box; }
@@ -32,12 +26,9 @@
     }
 
     .app {
-      max-width: 1320px;
+      max-width: 1180px;
       margin: 0 auto;
       padding: 24px;
-      display: grid;
-      grid-template-columns: 380px 1fr;
-      gap: 20px;
       min-height: 100vh;
     }
 
@@ -46,117 +37,191 @@
       border: 1px solid var(--line);
       border-radius: 18px;
       box-shadow: 0 10px 25px rgba(31, 41, 55, 0.06);
-      padding: 18px;
+      padding: 14px;
     }
 
-    h1 {
-      margin: 0 0 10px;
-      font-size: 1.8rem;
+    .scale-wrap {
+      position: relative;
+      min-height: 900px;
+      overflow: hidden;
+      border-radius: 18px;
+      background: radial-gradient(circle at top, #ffffff 0%, #f5f7ff 50%, #eef2ff 100%);
+      border: 1px solid var(--line);
     }
 
-    h2 {
-      margin: 0 0 10px;
-      font-size: 1.05rem;
+    .scale-stage {
+      position: relative;
+      width: 100%;
+      height: 900px;
     }
 
-    p {
-      line-height: 1.45;
-      margin: 0;
+    .state-aura {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      transition: background 0.45s ease;
     }
 
-    .muted {
-      color: var(--muted);
-      font-size: 0.95rem;
+    .state-aura.equal {
+      background: radial-gradient(circle at center, rgba(34,197,94,0.14) 0%, rgba(34,197,94,0.06) 18%, rgba(255,255,255,0) 44%);
     }
 
-    .stack {
-      display: grid;
-      gap: 16px;
+    .state-aura.less {
+      background: linear-gradient(90deg, rgba(59,130,246,0.08) 0%, rgba(255,255,255,0) 36%, rgba(249,115,22,0.08) 100%);
     }
 
-    .input-grid {
-      display: grid;
-      gap: 14px;
+    .state-aura.greater {
+      background: linear-gradient(90deg, rgba(249,115,22,0.08) 0%, rgba(255,255,255,0) 64%, rgba(59,130,246,0.08) 100%);
     }
 
-    .field {
-      display: grid;
-      gap: 8px;
+    .pivot-circle {
+      position: absolute;
+      left: 50%;
+      top: 340px;
+      width: 94px;
+      height: 94px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #475569 0%, #1f2937 52%, #0f172a 100%);
+      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.25), 0 0 0 10px rgba(255,255,255,0.45);
+      z-index: 2;
     }
 
-    .field label {
+    .pivot-core {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 22px;
+      height: 22px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: rgba(255,255,255,0.7);
+    }
+
+    .platform-group {
+      position: absolute;
+      width: 320px;
+      height: 380px;
+      transform: translateX(-50%);
+      transition: top 0.55s cubic-bezier(.22,1,.36,1), filter 0.45s ease;
+      z-index: 1;
+    }
+
+    .platform-group.left { left: 26%; }
+    .platform-group.right { left: 74%; }
+
+    .platform-group.lighter { filter: drop-shadow(0 14px 18px rgba(37, 99, 235, 0.16)); }
+    .platform-group.heavier { filter: drop-shadow(0 18px 22px rgba(249, 115, 22, 0.2)); }
+    .platform-group.equal { filter: drop-shadow(0 14px 18px rgba(34, 197, 94, 0.14)); }
+
+    .platform-label {
+      position: absolute;
+      left: 50%;
+      top: -30px;
+      transform: translateX(-50%);
       font-weight: 700;
-      font-size: 0.96rem;
+      font-size: 2rem;
+      color: var(--muted);
+      white-space: nowrap;
+      opacity: 0.9;
+    }
+
+    .platform {
+      position: absolute;
+      left: 50%;
+      bottom: 130px;
+      width: 240px;
+      height: 22px;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg, #cbd5e1 0%, var(--platform) 100%);
+      border-radius: 999px;
+      border: 1px solid rgba(100, 116, 139, 0.35);
+      box-shadow: inset 0 -4px 0 rgba(100, 116, 139, 0.45);
+    }
+
+    .items {
+      position: absolute;
+      left: 50%;
+      bottom: 162px;
+      transform: translateX(-50%);
+      width: 230px;
+      min-height: 150px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-content: flex-end;
+      justify-content: center;
+      padding-bottom: 12px;
+    }
+
+    .item {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.12);
+      animation: popIn 0.25s ease;
+    }
+
+    .weight { background: var(--weight); }
+    .xbox { background: var(--xbox); width: 56px; }
+
+    .item.negative {
+      background: #ffffff;
+      box-shadow: none;
+      border-style: dashed;
+      border-width: 2px;
+      font-weight: 700;
+    }
+
+    .weight.negative {
+      border-color: var(--weight);
+      color: #b45309;
+    }
+
+    .xbox.negative {
+      border-color: var(--xbox);
+      color: #6d28d9;
+    }
+
+    .platform-input {
+      position: absolute;
+      left: 50%;
+      bottom: 58px;
+      transform: translateX(-50%);
+      width: 240px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .platform-input label {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--muted);
     }
 
     input[type="text"] {
       width: 100%;
-      padding: 12px 14px;
+      padding: 10px 12px;
       border: 1px solid var(--line);
-      border-radius: 12px;
+      border-radius: 10px;
       font-size: 1rem;
-      background: #fff;
+      background: rgba(255,255,255,0.95);
     }
 
-    .row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    button {
-      border: 1px solid var(--line);
-      background: white;
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 0.95rem;
-      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-    }
-
-    button:hover {
-      transform: translateY(-1px);
-      border-color: #b7c2ea;
-      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.08);
-    }
-
-    .primary {
-      background: var(--accent);
-      color: white;
-      border-color: var(--accent);
-    }
-
-    .math-box,
-    .status,
-    .sample-box,
-    .relation-card {
-      background: #f8fafc;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 14px;
-    }
-
-    .math-box {
-      font-size: 1rem;
-      min-height: 52px;
-      display: flex;
-      align-items: center;
-    }
-
-    .sample-box {
-      display: grid;
-      gap: 10px;
-    }
-
-    .sample-box button {
-      text-align: left;
-    }
-
-    .relation-card {
+    .center-controls {
+      position: absolute;
+      left: 50%;
+      top: 430px;
+      transform: translateX(-50%);
       display: grid;
       gap: 12px;
+      justify-items: center;
+      z-index: 3;
     }
 
     .swipe-wrap {
@@ -176,7 +241,6 @@
       overflow: hidden;
       touch-action: none;
       user-select: none;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.45);
     }
 
     .track-line {
@@ -199,7 +263,6 @@
       border-radius: 50%;
       border: 2px solid #93c5fd;
       background: white;
-      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.1);
     }
 
     .track-stop.top { top: 26px; }
@@ -229,224 +292,56 @@
     .swipe-thumb.dragging {
       transition: none;
       cursor: grabbing;
-      box-shadow: 0 16px 28px rgba(37, 99, 235, 0.24);
       transform: translate(-50%, -50%) scale(1.04);
     }
 
-    .swipe-labels {
-      display: grid;
-      gap: 18px;
-      color: var(--muted);
-      font-weight: 700;
-    }
-
-    .swipe-hint {
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    .status {
+    button {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
       font-size: 0.95rem;
-      line-height: 1.5;
     }
 
-    .status strong { color: #111827; }
+    .primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
 
-    .legend {
+    .op-row {
+      position: absolute;
+      left: 50%;
+      bottom: 54px;
+      transform: translateX(-50%);
       display: flex;
+      justify-content: center;
       gap: 10px;
       flex-wrap: wrap;
+      z-index: 4;
     }
 
-    .legend span {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 10px;
-      background: #f8fafc;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      font-size: 0.92rem;
+    .op-row button {
+      opacity: 0.5;
+      background: #fff;
     }
 
-    .dot {
-      width: 14px;
-      height: 14px;
-      border-radius: 4px;
-      display: inline-block;
+    .op-row button:hover {
+      opacity: 0.85;
     }
 
-    .scale-wrap {
-      position: relative;
-      min-height: 760px;
-      overflow: hidden;
-      border-radius: 18px;
-      background: radial-gradient(circle at top, #ffffff 0%, #f5f7ff 50%, #eef2ff 100%);
-      border: 1px solid var(--line);
-    }
-
-    .scale-stage {
-      position: relative;
-      width: 100%;
-      height: 760px;
-    }
-
-    .state-aura {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      transition: background 0.45s ease;
-    }
-
-    .state-aura.equal {
-      background: radial-gradient(circle at center, rgba(34,197,94,0.14) 0%, rgba(34,197,94,0.06) 18%, rgba(255,255,255,0) 44%);
-    }
-
-    .state-aura.less {
-      background: linear-gradient(90deg, rgba(59,130,246,0.08) 0%, rgba(255,255,255,0) 36%, rgba(249,115,22,0.08) 100%);
-    }
-
-    .state-aura.greater {
-      background: linear-gradient(90deg, rgba(249,115,22,0.08) 0%, rgba(255,255,255,0) 64%, rgba(59,130,246,0.08) 100%);
-    }
-
-    .arm {
-      position: absolute;
-      top: 225px;
-      width: 2px;
-      height: 180px;
-      background: linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%);
-      transition: left 0.45s cubic-bezier(.22,1,.36,1), top 0.45s cubic-bezier(.22,1,.36,1);
-    }
-
-    .arm.left { left: 26%; }
-    .arm.right { left: 74%; }
-
-    .pivot-circle {
-      position: absolute;
-      left: 50%;
-      top: 340px;
-      width: 94px;
-      height: 94px;
-      transform: translate(-50%, -50%);
-      border-radius: 50%;
-      background: radial-gradient(circle at 35% 30%, #475569 0%, #1f2937 52%, #0f172a 100%);
-      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.25), 0 0 0 10px rgba(255,255,255,0.45);
-    }
-
-    .pivot-core {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 22px;
-      height: 22px;
-      transform: translate(-50%, -50%);
-      border-radius: 50%;
-      background: rgba(255,255,255,0.7);
-    }
-
-    .platform-group {
-      position: absolute;
-      width: 280px;
-      height: 280px;
-      transform: translateX(-50%);
-      transition: top 0.55s cubic-bezier(.22,1,.36,1), filter 0.45s ease;
-    }
-
-    .platform-group.lighter {
-      filter: drop-shadow(0 14px 18px rgba(37, 99, 235, 0.16));
-    }
-
-    .platform-group.heavier {
-      filter: drop-shadow(0 18px 22px rgba(249, 115, 22, 0.2));
-    }
-
-    .platform-group.equal {
-      filter: drop-shadow(0 14px 18px rgba(34, 197, 94, 0.14));
-    }
-
-    .platform-group.left { left: 26%; }
-    .platform-group.right { left: 74%; }
-
-    .rope {
-      position: absolute;
-      left: 50%;
-      top: -120px;
-      width: 4px;
-      height: 126px;
-      transform: translateX(-50%);
-      background: linear-gradient(180deg, #cbd5e1 0%, var(--rope) 100%);
-      border-radius: 999px;
-    }
-
-    .platform {
+    .statement {
       position: absolute;
       left: 50%;
       bottom: 20px;
-      width: 240px;
-      height: 22px;
       transform: translateX(-50%);
-      background: linear-gradient(180deg, #cbd5e1 0%, var(--platform) 100%);
-      border-radius: 999px;
-      border: 1px solid rgba(100, 116, 139, 0.35);
-      box-shadow: inset 0 -4px 0 rgba(100, 116, 139, 0.45);
-    }
-
-    .platform::before,
-    .platform::after {
-      content: "";
-      position: absolute;
-      top: -48px;
-      width: 2px;
-      height: 48px;
-      background: linear-gradient(180deg, #cbd5e1 0%, var(--rope) 100%);
-    }
-
-    .platform::before { left: 42px; }
-    .platform::after { right: 42px; }
-
-    .platform-label {
-      position: absolute;
-      left: 50%;
-      top: -162px;
-      transform: translateX(-50%);
-      font-weight: 700;
-      font-size: 1rem;
+      text-align: center;
       color: var(--muted);
-      white-space: nowrap;
+      font-size: 0.95rem;
+      z-index: 4;
     }
-
-    .items {
-      position: absolute;
-      left: 50%;
-      bottom: 52px;
-      transform: translateX(-50%);
-      width: 230px;
-      min-height: 150px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-content: flex-end;
-      justify-content: center;
-      padding-bottom: 12px;
-    }
-
-    .item {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      color: white;
-      box-shadow: 0 5px 10px rgba(0,0,0,0.12);
-      animation: popIn 0.25s ease;
-    }
-
-    .weight { background: var(--weight); }
-    .xbox { background: var(--xbox); width: 56px; }
 
     @keyframes popIn {
       from {
@@ -459,132 +354,84 @@
       }
     }
 
-    code {
-      background: #eef2ff;
-      padding: 2px 6px;
-      border-radius: 6px;
-      font-family: Consolas, monospace;
-    }
-
     @media (max-width: 980px) {
-      .app {
-        grid-template-columns: 1fr;
-      }
-
+      .scale-wrap,
       .scale-stage {
-        height: 820px;
+        min-height: 1020px;
+        height: 1020px;
       }
 
-      .scale-wrap {
-        min-height: 820px;
+      .platform-group {
+        width: 280px;
+      }
+
+      .platform-group.left { left: 24%; }
+      .platform-group.right { left: 76%; }
+
+      .center-controls {
+        top: 470px;
+      }
+
+      .op-row {
+        width: 90%;
       }
     }
   </style>
 </head>
 <body>
   <div class="app">
-    <section class="panel stack">
-      <div>
-        <h1>Inequality Scale Explorer</h1>
-        <p class="muted">Two separate side inputs feed the two platforms. Swipe the relation control up or down to move between the three states: left lighter, equal, or left heavier.</p>
-      </div>
-
-      <div class="input-grid">
-        <div class="field">
-          <label for="leftInput">Left platform input</label>
-          <input id="leftInput" type="text" value="x + 3" />
-        </div>
-        <div class="field">
-          <label for="rightInput">Right platform input</label>
-          <input id="rightInput" type="text" value="8" />
-        </div>
-        <div class="row">
-          <button id="buildBtn" class="primary">Build the scale</button>
-        </div>
-        <p class="muted">Supported now: one variable <code>x</code>, whole numbers, <code>+</code>, and <code>-</code> on each side.</p>
-      </div>
-
-      <div class="sample-box">
-        <h2>Sample setups</h2>
-        <button class="sampleBtn" data-left="x + 3" data-right="8" data-relation="=">Left: x + 3 | Right: 8 | equal</button>
-        <button class="sampleBtn" data-left="x + 1" data-right="5" data-relation="<">Left: x + 1 | Right: 5 | left lighter</button>
-        <button class="sampleBtn" data-left="7" data-right="x + 2" data-relation=">">Left: 7 | Right: x + 2 | left heavier</button>
-      </div>
-
-      <div class="relation-card">
-        <h2>Swipe relation state</h2>
-        <div class="swipe-wrap">
-          <div class="swipe-track" id="swipeTrack" aria-label="Relation state slider">
-            <div class="track-line"></div>
-            <div class="track-stop top"></div>
-            <div class="track-stop mid"></div>
-            <div class="track-stop bottom"></div>
-            <div class="swipe-thumb" id="swipeThumb">=</div>
-          </div>
-          <div class="swipe-labels">
-            <div>&lt; left lighter</div>
-            <div>= equal</div>
-            <div>&gt; left heavier</div>
-          </div>
-        </div>
-        <div class="swipe-hint">Drag the circle up or down.</div>
-      </div>
-
-      <div class="stack">
-        <div>
-          <h2>Add or subtract on both sides</h2>
-          <div class="row">
-            <button class="opBtn" data-op="1">+1</button>
-            <button class="opBtn" data-op="5">+5</button>
-            <button class="opBtn" data-op="-1">-1</button>
-            <button class="opBtn" data-op="-5">-5</button>
-          </div>
-          <p class="muted">These buttons change both sides together and re-render the items automatically.</p>
-        </div>
-      </div>
-
-      <div class="stack">
-        <div>
-          <h2>Current statement</h2>
-          <div class="math-box" id="expressionDisplay"></div>
-        </div>
-        <div class="status" id="statusBox"></div>
-      </div>
-
-      <div>
-        <h2>Legend</h2>
-        <div class="legend">
-          <span><i class="dot" style="background: var(--weight)"></i> unit weight = 1</span>
-          <span><i class="dot" style="background: var(--xbox)"></i> unknown block = x</span>
-        </div>
-      </div>
-    </section>
-
     <section class="panel">
       <div class="scale-wrap">
         <div class="scale-stage">
           <div class="state-aura equal" id="stateAura"></div>
-
-          <div class="arm left" id="leftArm"></div>
-          <div class="arm right" id="rightArm"></div>
 
           <div class="pivot-circle">
             <div class="pivot-core"></div>
           </div>
 
           <div class="platform-group left equal" id="leftGroup">
-            <div class="rope"></div>
             <div class="platform-label">Left platform</div>
             <div class="items" id="leftItems"></div>
             <div class="platform"></div>
+            <div class="platform-input">
+              <label for="leftInput">Left input</label>
+              <input id="leftInput" type="text" value="x + 3" />
+            </div>
           </div>
 
           <div class="platform-group right equal" id="rightGroup">
-            <div class="rope"></div>
             <div class="platform-label">Right platform</div>
             <div class="items" id="rightItems"></div>
             <div class="platform"></div>
+            <div class="platform-input">
+              <label for="rightInput">Right input</label>
+              <input id="rightInput" type="text" value="8" />
+            </div>
           </div>
+
+          <div class="center-controls">
+            <div class="swipe-wrap">
+              <div class="swipe-track" id="swipeTrack" aria-label="Relation state slider">
+                <div class="track-line"></div>
+                <div class="track-stop top"></div>
+                <div class="track-stop mid"></div>
+                <div class="track-stop bottom"></div>
+                <div class="swipe-thumb" id="swipeThumb">=</div>
+              </div>
+            </div>
+            <button id="buildBtn" class="primary">Build</button>
+          </div>
+
+          <div class="op-row">
+            <button class="opBtn" data-kind="constant" data-op="1">+1</button>
+            <button class="opBtn" data-kind="constant" data-op="5">+5</button>
+            <button class="opBtn" data-kind="constant" data-op="-1">-1</button>
+            <button class="opBtn" data-kind="constant" data-op="-5">-5</button>
+            <button class="opBtn" data-kind="x" data-op="1">+x</button>
+            <button class="opBtn" data-kind="x" data-op="-1">-x</button>
+          </div>
+
+          <div class="statement" id="statementLine"></div>
         </div>
       </div>
     </section>
@@ -594,31 +441,24 @@
     const leftInput = document.getElementById('leftInput');
     const rightInput = document.getElementById('rightInput');
     const buildBtn = document.getElementById('buildBtn');
-    const expressionDisplay = document.getElementById('expressionDisplay');
-    const statusBox = document.getElementById('statusBox');
+    const statementLine = document.getElementById('statementLine');
     const leftItems = document.getElementById('leftItems');
     const rightItems = document.getElementById('rightItems');
     const leftGroup = document.getElementById('leftGroup');
     const rightGroup = document.getElementById('rightGroup');
-    const leftArm = document.getElementById('leftArm');
-    const rightArm = document.getElementById('rightArm');
     const stateAura = document.getElementById('stateAura');
     const swipeTrack = document.getElementById('swipeTrack');
     const swipeThumb = document.getElementById('swipeThumb');
 
     const relationOrder = ['<', '=', '>'];
     const relationStops = { '<': 26, '=': 100, '>': 174 };
-    const platformTop = { top: 275, center: 360, bottom: 445 };
+    const platformTop = { top: 170, center: 250, bottom: 330 };
 
     const state = {
       relation: '=',
       left: { x: 0, constant: 0 },
       right: { x: 0, constant: 0 }
     };
-
-    function normalize(str) {
-      return str.replace(/\s+/g, ' ').trim();
-    }
 
     function parseSide(sideStr) {
       const cleaned = sideStr.replace(/\s+/g, '');
@@ -666,10 +506,6 @@
       return parts.join(' + ').replace(/\+ -/g, '- ');
     }
 
-    function buildDisplayExpression() {
-      return `${formatSide(state.left)} ${state.relation} ${formatSide(state.right)}`;
-    }
-
     function getMassValue(side) {
       const xMass = 4;
       return side.x * xMass + side.constant;
@@ -700,10 +536,6 @@
 
       leftGroup.style.top = `${platformTop[leftPosition]}px`;
       rightGroup.style.top = `${platformTop[rightPosition]}px`;
-      leftArm.style.top = '225px';
-      rightArm.style.top = '225px';
-      leftArm.style.height = `${platformTop[leftPosition] - 225}px`;
-      rightArm.style.height = `${platformTop[rightPosition] - 225}px`;
 
       leftGroup.className = `platform-group left ${getMoodClass(leftPosition)}`;
       rightGroup.className = `platform-group right ${getMoodClass(rightPosition)}`;
@@ -712,9 +544,9 @@
       stateAura.className = `state-aura ${auraClass}`;
     }
 
-    function makeItem(className, label) {
+    function makeItem(className, label, isNegative = false) {
       const div = document.createElement('div');
-      div.className = `item ${className}`;
+      div.className = `item ${className}${isNegative ? ' negative' : ''}`;
       div.textContent = label;
       return div;
     }
@@ -726,11 +558,11 @@
       const constantCount = Math.abs(side.constant);
 
       for (let i = 0; i < xCount; i++) {
-        container.appendChild(makeItem('xbox', side.x >= 0 ? 'x' : '-x'));
+        container.appendChild(makeItem('xbox', side.x >= 0 ? 'x' : '-x', side.x < 0));
       }
 
       for (let i = 0; i < constantCount; i++) {
-        container.appendChild(makeItem('weight', side.constant >= 0 ? '1' : '-1'));
+        container.appendChild(makeItem('weight', side.constant >= 0 ? '1' : '-1', side.constant < 0));
       }
     }
 
@@ -739,33 +571,12 @@
       swipeThumb.textContent = state.relation;
     }
 
-    function relationMeaning() {
-      if (state.relation === '=') return 'Both platforms stay at the same level.';
-      if (state.relation === '<') return 'The left platform is shown as lighter, so it rises.';
-      return 'The left platform is shown as heavier, so it drops.';
-    }
-
     function updateStatus() {
       const actual = actualComparison();
-      const match = actual === state.relation;
-      let note = '';
-
-      if (match) {
-        note = 'The displayed relation matches the current mass comparison of the items.';
-      } else {
-        note = 'The displayed relation is acting as a chosen state. It does not match the current mass comparison of the items yet.';
-      }
-
-      statusBox.innerHTML = `
-        <strong>Meaning:</strong> ${relationMeaning()}<br>
-        <strong>Current statement:</strong> ${formatSide(state.left)} ${state.relation} ${formatSide(state.right)}<br>
-        <strong>Item comparison right now:</strong> ${formatSide(state.left)} ${actual} ${formatSide(state.right)}<br>
-        <strong>Note:</strong> ${note}
-      `;
+      statementLine.textContent = `${formatSide(state.left)} ${state.relation} ${formatSide(state.right)} (actual mass comparison: ${actual})`;
     }
 
     function render() {
-      expressionDisplay.textContent = buildDisplayExpression();
       renderSideItems(leftItems, state.left);
       renderSideItems(rightItems, state.right);
       updateThumb();
@@ -783,9 +594,17 @@
       }
     }
 
-    function applyAddSubtract(amount) {
+    function applyConstantAddSubtract(amount) {
       state.left.constant += amount;
       state.right.constant += amount;
+      leftInput.value = formatSide(state.left);
+      rightInput.value = formatSide(state.right);
+      render();
+    }
+
+    function applyXAddSubtract(amount) {
+      state.left.x += amount;
+      state.right.x += amount;
       leftInput.value = formatSide(state.left);
       rightInput.value = formatSide(state.right);
       render();
@@ -836,17 +655,15 @@
     leftInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') buildFromInputs(); });
     rightInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') buildFromInputs(); });
 
-    document.querySelectorAll('.sampleBtn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        leftInput.value = btn.dataset.left;
-        rightInput.value = btn.dataset.right;
-        state.relation = btn.dataset.relation;
-        buildFromInputs();
-      });
-    });
-
     document.querySelectorAll('.opBtn').forEach(btn => {
-      btn.addEventListener('click', () => applyAddSubtract(parseInt(btn.dataset.op, 10)));
+      btn.addEventListener('click', () => {
+        const amount = parseInt(btn.dataset.op, 10);
+        if (btn.dataset.kind === 'x') {
+          applyXAddSubtract(amount);
+        } else {
+          applyConstantAddSubtract(amount);
+        }
+      });
     });
 
     swipeThumb.addEventListener('mousedown', startDrag);
