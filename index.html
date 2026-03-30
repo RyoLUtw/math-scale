@@ -282,6 +282,18 @@
       z-index: 3;
     }
 
+    .current-expression {
+      margin: 0;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid #bfdbfe;
+      background: rgba(239, 246, 255, 0.8);
+      color: #1d4ed8;
+      font-weight: 700;
+      font-size: 0.92rem;
+      text-align: center;
+    }
+
     .swipe-wrap {
       display: flex;
       justify-content: center;
@@ -478,6 +490,8 @@
               </div>
             </div>
             <button id="buildBtn" class="primary">Build</button>
+            <button id="restoreBtn">Restore expression</button>
+            <p class="current-expression" id="currentExpression">Currently solving: (build an expression)</p>
           </div>
 
           <div class="op-row">
@@ -508,6 +522,8 @@
     const stateAura = document.getElementById('stateAura');
     const swipeTrack = document.getElementById('swipeTrack');
     const swipeThumb = document.getElementById('swipeThumb');
+    const restoreBtn = document.getElementById('restoreBtn');
+    const currentExpression = document.getElementById('currentExpression');
 
     const relationOrder = ['<', '=', '>'];
     const relationStops = { '<': 26, '=': 100, '>': 174 };
@@ -517,7 +533,8 @@
       relation: '=',
       left: { x: 0, constant: 0 },
       right: { x: 0, constant: 0 },
-      divideView: null
+      divideView: null,
+      builtState: null
     };
 
     function parseSide(sideStr) {
@@ -676,6 +693,7 @@
 
     function updateStatus() {
       const actual = actualComparison();
+      currentExpression.textContent = `Currently solving: ${formatSide(state.left)} ${state.relation} ${formatSide(state.right)}`;
       if (state.divideView) {
         const note = state.divideView.nonWhole
           ? `split into ${state.divideView.n} stacks: each x corresponds to ${state.divideView.perStackLabel} (fraction shown as partial block)`
@@ -684,6 +702,14 @@
         return;
       }
       statementLine.textContent = `${formatSide(state.left)} ${state.relation} ${formatSide(state.right)} (actual mass comparison: ${actual})`;
+    }
+
+    function saveBuiltState() {
+      state.builtState = {
+        relation: state.relation,
+        left: { ...state.left },
+        right: { ...state.right }
+      };
     }
 
     function render() {
@@ -707,10 +733,26 @@
         state.left = parseSide(leftInput.value);
         state.right = parseSide(rightInput.value);
         state.divideView = null;
+        saveBuiltState();
         render();
       } catch (err) {
         alert(err.message);
       }
+    }
+
+    function restoreBuiltExpression() {
+      if (!state.builtState) {
+        alert('Build an expression first, then you can restore it.');
+        return;
+      }
+
+      state.left = { ...state.builtState.left };
+      state.right = { ...state.builtState.right };
+      state.relation = state.builtState.relation;
+      state.divideView = null;
+      leftInput.value = formatSide(state.left);
+      rightInput.value = formatSide(state.right);
+      render();
     }
 
     function applyConstantAddSubtract(amount) {
@@ -804,6 +846,7 @@
     }
 
     buildBtn.addEventListener('click', buildFromInputs);
+    restoreBtn.addEventListener('click', restoreBuiltExpression);
     leftInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') buildFromInputs(); });
     rightInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') buildFromInputs(); });
 
