@@ -782,11 +782,9 @@
       let xSide = null;
       if (Math.abs(state.left.x) > 1 && state.right.x === 0) xSide = 'left';
       else if (Math.abs(state.right.x) > 1 && state.left.x === 0) xSide = 'right';
-      else if (Math.abs(state.left.x) > 1 && Math.abs(state.right.x) <= 1) xSide = 'left';
-      else if (Math.abs(state.right.x) > 1 && Math.abs(state.left.x) <= 1) xSide = 'right';
 
       if (!xSide) {
-        alert('Use this when one side has n·x (n > 1).');
+        alert('Use this when one side has n·x (n > 1) and the opposite side has no x terms.');
         return;
       }
 
