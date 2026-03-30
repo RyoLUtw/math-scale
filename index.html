@@ -677,8 +677,9 @@
         if (remainder > 0) {
           const frac = reduceFraction(remainder, n);
           const fillRatio = remainder / n;
+          const fractionLabel = `${isNegative ? '-' : ''}${frac.numerator}/${frac.denominator}`;
           stack.appendChild(
-            makeItem('weight', '', isNegative, `${frac.numerator}/${frac.denominator}`, fillRatio)
+            makeItem('weight', '', isNegative, fractionLabel, fillRatio)
           );
         }
 
