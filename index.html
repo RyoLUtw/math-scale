@@ -6,7 +6,6 @@
   <title>Inequality Scale Explorer</title>
   <style>
     :root {
-      --bg: #f7f8fc;
       --panel: #ffffff;
       --line: #d8dced;
       --text: #1f2937;
@@ -15,7 +14,6 @@
       --weight: #f59e0b;
       --xbox: #8b5cf6;
       --platform: #94a3b8;
-      --rope: #94a3b8;
     }
 
     * { box-sizing: border-box; }
@@ -44,7 +42,7 @@
 
     .scale-wrap {
       position: relative;
-      min-height: 860px;
+      min-height: 900px;
       overflow: hidden;
       border-radius: 18px;
       background: radial-gradient(circle at top, #ffffff 0%, #f5f7ff 50%, #eef2ff 100%);
@@ -54,7 +52,7 @@
     .scale-stage {
       position: relative;
       width: 100%;
-      height: 860px;
+      height: 900px;
     }
 
     .state-aura {
@@ -86,6 +84,7 @@
       border-radius: 50%;
       background: radial-gradient(circle at 35% 30%, #475569 0%, #1f2937 52%, #0f172a 100%);
       box-shadow: 0 18px 36px rgba(15, 23, 42, 0.25), 0 0 0 10px rgba(255,255,255,0.45);
+      z-index: 2;
     }
 
     .pivot-core {
@@ -101,31 +100,24 @@
 
     .platform-group {
       position: absolute;
-      width: 280px;
-      height: 280px;
+      width: 320px;
+      height: 380px;
       transform: translateX(-50%);
       transition: top 0.55s cubic-bezier(.22,1,.36,1), filter 0.45s ease;
-    }
-
-    .platform-group.lighter {
-      filter: drop-shadow(0 14px 18px rgba(37, 99, 235, 0.16));
-    }
-
-    .platform-group.heavier {
-      filter: drop-shadow(0 18px 22px rgba(249, 115, 22, 0.2));
-    }
-
-    .platform-group.equal {
-      filter: drop-shadow(0 14px 18px rgba(34, 197, 94, 0.14));
+      z-index: 1;
     }
 
     .platform-group.left { left: 26%; }
     .platform-group.right { left: 74%; }
 
+    .platform-group.lighter { filter: drop-shadow(0 14px 18px rgba(37, 99, 235, 0.16)); }
+    .platform-group.heavier { filter: drop-shadow(0 18px 22px rgba(249, 115, 22, 0.2)); }
+    .platform-group.equal { filter: drop-shadow(0 14px 18px rgba(34, 197, 94, 0.14)); }
+
     .platform-label {
       position: absolute;
       left: 50%;
-      top: -36px;
+      top: -30px;
       transform: translateX(-50%);
       font-weight: 700;
       font-size: 2rem;
@@ -137,7 +129,7 @@
     .platform {
       position: absolute;
       left: 50%;
-      bottom: 20px;
+      bottom: 130px;
       width: 240px;
       height: 22px;
       transform: translateX(-50%);
@@ -150,7 +142,7 @@
     .items {
       position: absolute;
       left: 50%;
-      bottom: 52px;
+      bottom: 162px;
       transform: translateX(-50%);
       width: 230px;
       min-height: 150px;
@@ -178,50 +170,17 @@
     .weight { background: var(--weight); }
     .xbox { background: var(--xbox); width: 56px; }
 
-    @keyframes popIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px) scale(0.92);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    .control-dock {
+    .platform-input {
       position: absolute;
       left: 50%;
-      bottom: 22px;
+      bottom: 58px;
       transform: translateX(-50%);
-      width: min(840px, 94%);
-      z-index: 5;
-    }
-
-    .dock-card {
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(4px);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-      display: grid;
-      gap: 14px;
-    }
-
-    .inputs-inline {
-      display: grid;
-      grid-template-columns: 1fr 1fr auto;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .field {
+      width: 240px;
       display: grid;
       gap: 6px;
     }
 
-    .field label {
+    .platform-input label {
       font-size: 0.9rem;
       font-weight: 700;
       color: var(--muted);
@@ -233,23 +192,18 @@
       border: 1px solid var(--line);
       border-radius: 10px;
       font-size: 1rem;
-      background: #fff;
+      background: rgba(255,255,255,0.95);
     }
 
-    button {
-      border: 1px solid var(--line);
-      background: white;
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 0.95rem;
-    }
-
-    .primary {
-      background: var(--accent);
-      color: white;
-      border-color: var(--accent);
+    .center-controls {
+      position: absolute;
+      left: 50%;
+      top: 430px;
+      transform: translateX(-50%);
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+      z-index: 3;
     }
 
     .swipe-wrap {
@@ -330,32 +284,85 @@
       font-weight: 700;
     }
 
-    .op-row {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .statement {
-      text-align: center;
-      color: var(--muted);
+    button {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
       font-size: 0.95rem;
     }
 
-    @media (max-width: 980px) {
-      .inputs-inline {
-        grid-template-columns: 1fr;
-      }
+    .primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
 
+    .op-row {
+      position: absolute;
+      left: 50%;
+      bottom: 54px;
+      transform: translateX(-50%);
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      z-index: 4;
+    }
+
+    .op-row button {
+      opacity: 0.5;
+      background: #fff;
+    }
+
+    .op-row button:hover {
+      opacity: 0.85;
+    }
+
+    .statement {
+      position: absolute;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.95rem;
+      z-index: 4;
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.92);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @media (max-width: 980px) {
       .scale-wrap,
       .scale-stage {
-        min-height: 980px;
-        height: 980px;
+        min-height: 1020px;
+        height: 1020px;
       }
 
-      .platform-label {
-        font-size: 1.5rem;
+      .platform-group {
+        width: 280px;
+      }
+
+      .platform-group.left { left: 24%; }
+      .platform-group.right { left: 76%; }
+
+      .center-controls {
+        top: 470px;
+      }
+
+      .op-row {
+        width: 90%;
       }
     }
   </style>
@@ -375,53 +382,50 @@
             <div class="platform-label">Left platform</div>
             <div class="items" id="leftItems"></div>
             <div class="platform"></div>
+            <div class="platform-input">
+              <label for="leftInput">Left input</label>
+              <input id="leftInput" type="text" value="x + 3" />
+            </div>
           </div>
 
           <div class="platform-group right equal" id="rightGroup">
             <div class="platform-label">Right platform</div>
             <div class="items" id="rightItems"></div>
             <div class="platform"></div>
-          </div>
-
-          <div class="control-dock">
-            <div class="dock-card">
-              <div class="inputs-inline">
-                <div class="field">
-                  <label for="leftInput">Left input</label>
-                  <input id="leftInput" type="text" value="x + 3" />
-                </div>
-                <div class="field">
-                  <label for="rightInput">Right input</label>
-                  <input id="rightInput" type="text" value="8" />
-                </div>
-                <button id="buildBtn" class="primary">Build</button>
-              </div>
-
-              <div class="swipe-wrap">
-                <div class="swipe-track" id="swipeTrack" aria-label="Relation state slider">
-                  <div class="track-line"></div>
-                  <div class="track-stop top"></div>
-                  <div class="track-stop mid"></div>
-                  <div class="track-stop bottom"></div>
-                  <div class="swipe-thumb" id="swipeThumb">=</div>
-                </div>
-                <div class="swipe-labels">
-                  <div>&lt; left lighter</div>
-                  <div>= equal</div>
-                  <div>&gt; left heavier</div>
-                </div>
-              </div>
-
-              <div class="op-row">
-                <button class="opBtn" data-op="1">+1</button>
-                <button class="opBtn" data-op="5">+5</button>
-                <button class="opBtn" data-op="-1">-1</button>
-                <button class="opBtn" data-op="-5">-5</button>
-              </div>
-
-              <div class="statement" id="statementLine"></div>
+            <div class="platform-input">
+              <label for="rightInput">Right input</label>
+              <input id="rightInput" type="text" value="8" />
             </div>
           </div>
+
+          <div class="center-controls">
+            <div class="swipe-wrap">
+              <div class="swipe-track" id="swipeTrack" aria-label="Relation state slider">
+                <div class="track-line"></div>
+                <div class="track-stop top"></div>
+                <div class="track-stop mid"></div>
+                <div class="track-stop bottom"></div>
+                <div class="swipe-thumb" id="swipeThumb">=</div>
+              </div>
+              <div class="swipe-labels">
+                <div>&lt; left lighter</div>
+                <div>= equal</div>
+                <div>&gt; left heavier</div>
+              </div>
+            </div>
+            <button id="buildBtn" class="primary">Build</button>
+          </div>
+
+          <div class="op-row">
+            <button class="opBtn" data-kind="constant" data-op="1">+1</button>
+            <button class="opBtn" data-kind="constant" data-op="5">+5</button>
+            <button class="opBtn" data-kind="constant" data-op="-1">-1</button>
+            <button class="opBtn" data-kind="constant" data-op="-5">-5</button>
+            <button class="opBtn" data-kind="x" data-op="1">+x</button>
+            <button class="opBtn" data-kind="x" data-op="-1">-x</button>
+          </div>
+
+          <div class="statement" id="statementLine"></div>
         </div>
       </div>
     </section>
@@ -442,7 +446,7 @@
 
     const relationOrder = ['<', '=', '>'];
     const relationStops = { '<': 26, '=': 100, '>': 174 };
-    const platformTop = { top: 200, center: 280, bottom: 360 };
+    const platformTop = { top: 170, center: 250, bottom: 330 };
 
     const state = {
       relation: '=',
@@ -584,9 +588,17 @@
       }
     }
 
-    function applyAddSubtract(amount) {
+    function applyConstantAddSubtract(amount) {
       state.left.constant += amount;
       state.right.constant += amount;
+      leftInput.value = formatSide(state.left);
+      rightInput.value = formatSide(state.right);
+      render();
+    }
+
+    function applyXAddSubtract(amount) {
+      state.left.x += amount;
+      state.right.x += amount;
       leftInput.value = formatSide(state.left);
       rightInput.value = formatSide(state.right);
       render();
@@ -638,7 +650,14 @@
     rightInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') buildFromInputs(); });
 
     document.querySelectorAll('.opBtn').forEach(btn => {
-      btn.addEventListener('click', () => applyAddSubtract(parseInt(btn.dataset.op, 10)));
+      btn.addEventListener('click', () => {
+        const amount = parseInt(btn.dataset.op, 10);
+        if (btn.dataset.kind === 'x') {
+          applyXAddSubtract(amount);
+        } else {
+          applyConstantAddSubtract(amount);
+        }
+      });
     });
 
     swipeThumb.addEventListener('mousedown', startDrag);
