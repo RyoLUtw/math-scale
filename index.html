@@ -74,28 +74,20 @@
       background: linear-gradient(90deg, rgba(249,115,22,0.08) 0%, rgba(255,255,255,0) 64%, rgba(59,130,246,0.08) 100%);
     }
 
-    .pivot-circle {
+    .original-expression {
       position: absolute;
       left: 50%;
       top: 340px;
-      width: 94px;
-      height: 94px;
       transform: translate(-50%, -50%);
-      border-radius: 50%;
-      background: radial-gradient(circle at 35% 30%, #475569 0%, #1f2937 52%, #0f172a 100%);
-      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.25), 0 0 0 10px rgba(255,255,255,0.45);
-      z-index: 2;
-    }
-
-    .pivot-core {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 22px;
-      height: 22px;
-      transform: translate(-50%, -50%);
-      border-radius: 50%;
-      background: rgba(255,255,255,0.7);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 16px;
+      background: #ffffff;
+      box-shadow: 0 8px 16px rgba(31, 41, 55, 0.1);
+      color: #000;
+      font-weight: 700;
+      z-index: 3;
+      white-space: nowrap;
     }
 
     .platform-group {
@@ -103,7 +95,7 @@
       width: 320px;
       height: 380px;
       transform: translateX(-50%);
-      transition: top 0.55s cubic-bezier(.22,1,.36,1), filter 0.45s ease;
+      transition: top 0.45s cubic-bezier(.22,1,.36,1), filter 0.45s ease;
       z-index: 1;
     }
 
@@ -113,18 +105,6 @@
     .platform-group.lighter { filter: drop-shadow(0 14px 18px rgba(37, 99, 235, 0.16)); }
     .platform-group.heavier { filter: drop-shadow(0 18px 22px rgba(249, 115, 22, 0.2)); }
     .platform-group.equal { filter: drop-shadow(0 14px 18px rgba(34, 197, 94, 0.14)); }
-
-    .platform-label {
-      position: absolute;
-      left: 50%;
-      top: -30px;
-      transform: translateX(-50%);
-      font-weight: 700;
-      font-size: 2rem;
-      color: var(--muted);
-      white-space: nowrap;
-      opacity: 0.9;
-    }
 
     .platform {
       position: absolute;
@@ -188,24 +168,27 @@
       color: #6d28d9;
     }
 
-    .platform-input {
+    .center-controls {
       position: absolute;
       left: 50%;
-      bottom: 58px;
+      top: 422px;
       transform: translateX(-50%);
-      width: 240px;
       display: grid;
-      gap: 6px;
+      gap: 12px;
+      justify-items: center;
+      z-index: 4;
     }
 
-    .platform-input label {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--muted);
+    .build-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
-    input[type="text"] {
-      width: 100%;
+    .expr-input {
+      width: 140px;
       padding: 10px 12px;
       border: 1px solid var(--line);
       border-radius: 10px;
@@ -213,16 +196,39 @@
       background: rgba(255,255,255,0.95);
     }
 
-    .center-controls {
-      position: absolute;
-      left: 50%;
-      top: 430px;
-      transform: translateX(-50%);
-      display: grid;
-      gap: 12px;
-      justify-items: center;
-      z-index: 3;
+    .mode-switch {
+      display: inline-flex;
+      background: #e5e7eb;
+      border-radius: 999px;
+      padding: 4px;
+      gap: 4px;
     }
+
+    .mode-switch button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      background: transparent;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .mode-switch button.active {
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+
+    .trial-controls {
+      display: none;
+      gap: 8px;
+      align-items: center;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 8px 12px;
+    }
+
+    .trial-controls.show { display: flex; }
 
     .swipe-wrap {
       display: flex;
@@ -332,17 +338,6 @@
       opacity: 0.85;
     }
 
-    .statement {
-      position: absolute;
-      left: 50%;
-      bottom: 20px;
-      transform: translateX(-50%);
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.95rem;
-      z-index: 4;
-    }
-
     @keyframes popIn {
       from {
         opacity: 0;
@@ -351,29 +346,6 @@
       to {
         opacity: 1;
         transform: translateY(0) scale(1);
-      }
-    }
-
-    @media (max-width: 980px) {
-      .scale-wrap,
-      .scale-stage {
-        min-height: 1020px;
-        height: 1020px;
-      }
-
-      .platform-group {
-        width: 280px;
-      }
-
-      .platform-group.left { left: 24%; }
-      .platform-group.right { left: 76%; }
-
-      .center-controls {
-        top: 470px;
-      }
-
-      .op-row {
-        width: 90%;
       }
     }
   </style>
@@ -385,31 +357,37 @@
         <div class="scale-stage">
           <div class="state-aura equal" id="stateAura"></div>
 
-          <div class="pivot-circle">
-            <div class="pivot-core"></div>
-          </div>
+          <div class="original-expression" id="originalExpression">Original: x + 3 = 8</div>
 
           <div class="platform-group left equal" id="leftGroup">
-            <div class="platform-label">Left platform</div>
             <div class="items" id="leftItems"></div>
             <div class="platform"></div>
-            <div class="platform-input">
-              <label for="leftInput">Left input</label>
-              <input id="leftInput" type="text" value="x + 3" />
-            </div>
           </div>
 
           <div class="platform-group right equal" id="rightGroup">
-            <div class="platform-label">Right platform</div>
             <div class="items" id="rightItems"></div>
             <div class="platform"></div>
-            <div class="platform-input">
-              <label for="rightInput">Right input</label>
-              <input id="rightInput" type="text" value="8" />
-            </div>
           </div>
 
           <div class="center-controls">
+            <div class="build-row">
+              <input id="leftInput" class="expr-input" type="text" value="x + 3" aria-label="Left expression" />
+              <span>=</span>
+              <input id="rightInput" class="expr-input" type="text" value="8" aria-label="Right expression" />
+              <button id="buildBtn" class="primary">Build</button>
+            </div>
+
+            <div class="mode-switch" role="tablist" aria-label="Mode switch">
+              <button id="modeTrial" type="button">Trial & Error mode</button>
+              <button id="modeIsolate" type="button" class="active">Isolate X mode</button>
+            </div>
+
+            <div class="trial-controls" id="trialControls">
+              <label for="xSlider">x value:</label>
+              <input id="xSlider" type="range" step="0.1" />
+              <span id="xSliderValue"></span>
+            </div>
+
             <div class="swipe-wrap">
               <div class="swipe-track" id="swipeTrack" aria-label="Relation state slider">
                 <div class="track-line"></div>
@@ -419,10 +397,9 @@
                 <div class="swipe-thumb" id="swipeThumb">=</div>
               </div>
             </div>
-            <button id="buildBtn" class="primary">Build</button>
           </div>
 
-          <div class="op-row">
+          <div class="op-row" id="opRow">
             <button class="opBtn" data-kind="constant" data-op="1">+1</button>
             <button class="opBtn" data-kind="constant" data-op="5">+5</button>
             <button class="opBtn" data-kind="constant" data-op="-1">-1</button>
@@ -430,8 +407,6 @@
             <button class="opBtn" data-kind="x" data-op="1">+x</button>
             <button class="opBtn" data-kind="x" data-op="-1">-x</button>
           </div>
-
-          <div class="statement" id="statementLine"></div>
         </div>
       </div>
     </section>
@@ -441,7 +416,6 @@
     const leftInput = document.getElementById('leftInput');
     const rightInput = document.getElementById('rightInput');
     const buildBtn = document.getElementById('buildBtn');
-    const statementLine = document.getElementById('statementLine');
     const leftItems = document.getElementById('leftItems');
     const rightItems = document.getElementById('rightItems');
     const leftGroup = document.getElementById('leftGroup');
@@ -449,48 +423,54 @@
     const stateAura = document.getElementById('stateAura');
     const swipeTrack = document.getElementById('swipeTrack');
     const swipeThumb = document.getElementById('swipeThumb');
+    const modeTrial = document.getElementById('modeTrial');
+    const modeIsolate = document.getElementById('modeIsolate');
+    const trialControls = document.getElementById('trialControls');
+    const xSlider = document.getElementById('xSlider');
+    const xSliderValue = document.getElementById('xSliderValue');
+    const opRow = document.getElementById('opRow');
+    const originalExpression = document.getElementById('originalExpression');
 
     const relationOrder = ['<', '=', '>'];
     const relationStops = { '<': 26, '=': 100, '>': 174 };
-    const platformTop = { top: 170, center: 250, bottom: 330 };
+    const baseY = 250;
+    const maxTilt = 80;
 
     const state = {
+      mode: 'isolate',
       relation: '=',
       left: { x: 0, constant: 0 },
-      right: { x: 0, constant: 0 }
+      right: { x: 0, constant: 0 },
+      original: 'x + 3 = 8',
+      xTrial: 0,
+      trialRange: { min: -10, max: 10 }
     };
 
     function parseSide(sideStr) {
       const cleaned = sideStr.replace(/\s+/g, '');
       if (!cleaned) return { x: 0, constant: 0 };
-
       const tokens = cleaned.match(/[+-]?[^+-]+/g);
       if (!tokens) throw new Error('Could not read one side of the expression.');
 
       let x = 0;
       let constant = 0;
-
       for (let token of tokens) {
         if (!token) continue;
         let sign = 1;
         if (token[0] === '+') token = token.slice(1);
-        else if (token[0] === '-') {
-          sign = -1;
-          token = token.slice(1);
-        }
+        else if (token[0] === '-') { sign = -1; token = token.slice(1); }
 
-        if (token.toLowerCase() === 'x') {
-          x += sign;
-        } else if (/^\d+x$/i.test(token)) {
-          x += sign * parseInt(token, 10);
-        } else if (/^\d+$/.test(token)) {
-          constant += sign * parseInt(token, 10);
-        } else {
-          throw new Error(`Unsupported term: ${token}`);
-        }
+        if (token.toLowerCase() === 'x') x += sign;
+        else if (/^\d+x$/i.test(token)) x += sign * parseInt(token, 10);
+        else if (/^\d+$/.test(token)) constant += sign * parseInt(token, 10);
+        else throw new Error(`Unsupported term: ${token}`);
       }
-
       return { x, constant };
+    }
+
+    function validateLinearForm(left, right) {
+      if (right.x !== 0) throw new Error('Use ax + b = c format: right side must be a constant.');
+      if (left.x === 0) throw new Error('Use ax + b = c format: left side must contain x term (a ≠ 0).');
     }
 
     function formatSide(side) {
@@ -500,47 +480,49 @@
         else if (side.x === -1) parts.push('-x');
         else parts.push(`${side.x}x`);
       }
-      if (side.constant !== 0 || parts.length === 0) {
-        parts.push(String(side.constant));
-      }
+      if (side.constant !== 0 || parts.length === 0) parts.push(String(side.constant));
       return parts.join(' + ').replace(/\+ -/g, '- ');
     }
 
-    function getMassValue(side) {
-      const xMass = 4;
-      return side.x * xMass + side.constant;
+    function massAtX(side, xValue) {
+      return side.x * xValue + side.constant;
     }
 
-    function actualComparison() {
-      const leftMass = getMassValue(state.left);
-      const rightMass = getMassValue(state.right);
-      if (leftMass === rightMass) return '=';
-      return leftMass < rightMass ? '<' : '>';
+    function relationForDifference(diff) {
+      if (Math.abs(diff) < 0.0001) return '=';
+      return diff < 0 ? '<' : '>';
     }
 
-    function getPlatformState(sideName) {
-      if (state.relation === '=') return 'center';
-      if (state.relation === '<') return sideName === 'left' ? 'top' : 'bottom';
-      return sideName === 'left' ? 'bottom' : 'top';
+    function solutionX() {
+      const a = state.left.x - state.right.x;
+      const b = state.right.constant - state.left.constant;
+      if (a === 0) return null;
+      return b / a;
     }
 
-    function getMoodClass(position) {
-      if (position === 'top') return 'lighter';
-      if (position === 'bottom') return 'heavier';
-      return 'equal';
+    function computeTiltRatio() {
+      if (state.mode === 'trial') {
+        const leftVal = massAtX(state.left, state.xTrial);
+        const rightVal = massAtX(state.right, state.xTrial);
+        const diff = leftVal - rightVal;
+        const denom = Math.max(1, Math.abs(state.trialRange.max - state.trialRange.min));
+        return Math.max(-1, Math.min(1, (diff * 2) / denom));
+      }
+      if (state.relation === '=') return 0;
+      return state.relation === '<' ? -1 : 1;
     }
 
     function updateGroups() {
-      const leftPosition = getPlatformState('left');
-      const rightPosition = getPlatformState('right');
+      const ratio = computeTiltRatio();
+      leftGroup.style.top = `${baseY + ratio * maxTilt}px`;
+      rightGroup.style.top = `${baseY - ratio * maxTilt}px`;
 
-      leftGroup.style.top = `${platformTop[leftPosition]}px`;
-      rightGroup.style.top = `${platformTop[rightPosition]}px`;
+      const leftClass = ratio < -0.05 ? 'lighter' : ratio > 0.05 ? 'heavier' : 'equal';
+      const rightClass = ratio > 0.05 ? 'lighter' : ratio < -0.05 ? 'heavier' : 'equal';
+      leftGroup.className = `platform-group left ${leftClass}`;
+      rightGroup.className = `platform-group right ${rightClass}`;
 
-      leftGroup.className = `platform-group left ${getMoodClass(leftPosition)}`;
-      rightGroup.className = `platform-group right ${getMoodClass(rightPosition)}`;
-
-      const auraClass = state.relation === '=' ? 'equal' : state.relation === '<' ? 'less' : 'greater';
+      const auraClass = ratio === 0 ? 'equal' : ratio < 0 ? 'less' : 'greater';
       stateAura.className = `state-aura ${auraClass}`;
     }
 
@@ -553,41 +535,61 @@
 
     function renderSideItems(container, side) {
       container.innerHTML = '';
-
-      const xCount = Math.abs(side.x);
-      const constantCount = Math.abs(side.constant);
-
-      for (let i = 0; i < xCount; i++) {
-        container.appendChild(makeItem('xbox', side.x >= 0 ? 'x' : '-x', side.x < 0));
-      }
-
-      for (let i = 0; i < constantCount; i++) {
-        container.appendChild(makeItem('weight', side.constant >= 0 ? '1' : '-1', side.constant < 0));
-      }
+      for (let i = 0; i < Math.abs(side.x); i++) container.appendChild(makeItem('xbox', side.x >= 0 ? 'x' : '-x', side.x < 0));
+      for (let i = 0; i < Math.abs(side.constant); i++) container.appendChild(makeItem('weight', side.constant >= 0 ? '1' : '-1', side.constant < 0));
     }
 
     function updateThumb() {
-      swipeThumb.style.top = `${relationStops[state.relation]}px`;
+      let thumbTop = relationStops[state.relation];
+      if (state.mode === 'trial') {
+        const ratio = computeTiltRatio();
+        thumbTop = relationStops['='] + ratio * (relationStops['>'] - relationStops['=']);
+        thumbTop = Math.max(relationStops['<'], Math.min(relationStops['>'], thumbTop));
+      }
+      swipeThumb.style.top = `${thumbTop}px`;
       swipeThumb.textContent = state.relation;
     }
 
-    function updateStatus() {
-      const actual = actualComparison();
-      statementLine.textContent = `${formatSide(state.left)} ${state.relation} ${formatSide(state.right)} (actual mass comparison: ${actual})`;
+    function setTrialRange() {
+      const xSol = solutionX();
+      if (xSol === null || !Number.isFinite(xSol)) {
+        state.trialRange = { min: -10, max: 10 };
+        state.xTrial = 0;
+      } else {
+        state.trialRange = { min: xSol - 10, max: xSol + 10 };
+        state.xTrial = xSol;
+      }
+      xSlider.min = state.trialRange.min;
+      xSlider.max = state.trialRange.max;
+      xSlider.value = state.xTrial;
+      xSliderValue.textContent = Number(state.xTrial).toFixed(1);
+    }
+
+    function syncTrialRelation() {
+      if (state.mode !== 'trial') return;
+      const diff = massAtX(state.left, state.xTrial) - massAtX(state.right, state.xTrial);
+      state.relation = relationForDifference(diff);
     }
 
     function render() {
       renderSideItems(leftItems, state.left);
       renderSideItems(rightItems, state.right);
+      syncTrialRelation();
       updateThumb();
       updateGroups();
-      updateStatus();
+      xSliderValue.textContent = Number(state.xTrial).toFixed(1);
     }
 
     function buildFromInputs() {
       try {
-        state.left = parseSide(leftInput.value);
-        state.right = parseSide(rightInput.value);
+        const left = parseSide(leftInput.value);
+        const right = parseSide(rightInput.value);
+        validateLinearForm(left, right);
+        state.left = left;
+        state.right = right;
+        state.original = `${formatSide(left)} = ${formatSide(right)}`;
+        originalExpression.textContent = `Original: ${state.original}`;
+        setTrialRange();
         render();
       } catch (err) {
         alert(err.message);
@@ -599,6 +601,7 @@
       state.right.constant += amount;
       leftInput.value = formatSide(state.left);
       rightInput.value = formatSide(state.right);
+      if (state.mode === 'trial') setTrialRange();
       render();
     }
 
@@ -607,10 +610,12 @@
       state.right.x += amount;
       leftInput.value = formatSide(state.left);
       rightInput.value = formatSide(state.right);
+      if (state.mode === 'trial') setTrialRange();
       render();
     }
 
     function setRelation(relation) {
+      if (state.mode === 'trial') return;
       state.relation = relation;
       render();
     }
@@ -623,9 +628,23 @@
       return distances[0].rel;
     }
 
+    function setMode(mode) {
+      state.mode = mode;
+      modeTrial.classList.toggle('active', mode === 'trial');
+      modeIsolate.classList.toggle('active', mode === 'isolate');
+      trialControls.classList.toggle('show', mode === 'trial');
+      opRow.style.display = mode === 'trial' ? 'none' : 'flex';
+      swipeThumb.style.cursor = mode === 'trial' ? 'default' : 'grab';
+      if (mode === 'trial') {
+        setTrialRange();
+      }
+      render();
+    }
+
     let dragging = false;
 
     function startDrag(e) {
+      if (state.mode === 'trial') return;
       dragging = true;
       swipeThumb.classList.add('dragging');
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -634,7 +653,7 @@
     }
 
     function moveDrag(e) {
-      if (!dragging) return;
+      if (!dragging || state.mode === 'trial') return;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       const rect = swipeTrack.getBoundingClientRect();
       const top = Math.max(26, Math.min(174, clientY - rect.top));
@@ -643,7 +662,7 @@
     }
 
     function endDrag(e) {
-      if (!dragging) return;
+      if (!dragging || state.mode === 'trial') return;
       dragging = false;
       swipeThumb.classList.remove('dragging');
       const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
@@ -658,17 +677,22 @@
     document.querySelectorAll('.opBtn').forEach(btn => {
       btn.addEventListener('click', () => {
         const amount = parseInt(btn.dataset.op, 10);
-        if (btn.dataset.kind === 'x') {
-          applyXAddSubtract(amount);
-        } else {
-          applyConstantAddSubtract(amount);
-        }
+        if (btn.dataset.kind === 'x') applyXAddSubtract(amount);
+        else applyConstantAddSubtract(amount);
       });
+    });
+
+    modeTrial.addEventListener('click', () => setMode('trial'));
+    modeIsolate.addEventListener('click', () => setMode('isolate'));
+
+    xSlider.addEventListener('input', () => {
+      state.xTrial = parseFloat(xSlider.value);
+      render();
     });
 
     swipeThumb.addEventListener('mousedown', startDrag);
     swipeTrack.addEventListener('mousedown', (e) => {
-      if (e.target === swipeThumb) return;
+      if (state.mode === 'trial' || e.target === swipeThumb) return;
       setRelation(relationFromY(e.clientY));
     });
     window.addEventListener('mousemove', moveDrag);
@@ -676,7 +700,7 @@
 
     swipeThumb.addEventListener('touchstart', startDrag, { passive: false });
     swipeTrack.addEventListener('touchstart', (e) => {
-      if (e.target === swipeThumb) return;
+      if (state.mode === 'trial' || e.target === swipeThumb) return;
       setRelation(relationFromY(e.touches[0].clientY));
       e.preventDefault();
     }, { passive: false });
