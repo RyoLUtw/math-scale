@@ -623,6 +623,7 @@
     }
 
     function updateCurrentExpressionPill() {
+      currentExpressionPill.style.display = state.mode === 'trial' ? 'none' : 'block';
       currentExpressionPill.textContent = `Currently solving: ${formatSide(state.left)} ${state.relation} ${formatSide(state.right)}`;
     }
 
