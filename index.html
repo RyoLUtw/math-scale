@@ -168,6 +168,14 @@
       color: #6d28d9;
     }
 
+    .platform-input {
+      position: absolute;
+      left: 50%;
+      bottom: 58px;
+      transform: translateX(-50%);
+      width: 240px;
+    }
+
     .center-controls {
       position: absolute;
       left: 50%;
@@ -179,16 +187,8 @@
       z-index: 4;
     }
 
-    .build-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
     .expr-input {
-      width: 140px;
+      width: 100%;
       padding: 10px 12px;
       border: 1px solid var(--line);
       border-radius: 10px;
@@ -218,10 +218,20 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.12);
     }
 
+    .controls-swap {
+      position: absolute;
+      left: 50%;
+      bottom: 54px;
+      transform: translateX(-50%);
+      min-height: 42px;
+      z-index: 4;
+    }
+
     .trial-controls {
       display: none;
       gap: 8px;
       align-items: center;
+      justify-content: center;
       background: #fff;
       border: 1px solid var(--line);
       border-radius: 12px;
@@ -318,15 +328,10 @@
     }
 
     .op-row {
-      position: absolute;
-      left: 50%;
-      bottom: 54px;
-      transform: translateX(-50%);
       display: flex;
       justify-content: center;
       gap: 10px;
       flex-wrap: wrap;
-      z-index: 4;
     }
 
     .op-row button {
@@ -362,32 +367,20 @@
           <div class="platform-group left equal" id="leftGroup">
             <div class="items" id="leftItems"></div>
             <div class="platform"></div>
+            <div class="platform-input">
+              <input id="leftInput" class="expr-input" type="text" value="x + 3" aria-label="Left expression" />
+            </div>
           </div>
 
           <div class="platform-group right equal" id="rightGroup">
             <div class="items" id="rightItems"></div>
             <div class="platform"></div>
+            <div class="platform-input">
+              <input id="rightInput" class="expr-input" type="text" value="8" aria-label="Right expression" />
+            </div>
           </div>
 
           <div class="center-controls">
-            <div class="build-row">
-              <input id="leftInput" class="expr-input" type="text" value="x + 3" aria-label="Left expression" />
-              <span>=</span>
-              <input id="rightInput" class="expr-input" type="text" value="8" aria-label="Right expression" />
-              <button id="buildBtn" class="primary">Build</button>
-            </div>
-
-            <div class="mode-switch" role="tablist" aria-label="Mode switch">
-              <button id="modeTrial" type="button">Trial & Error mode</button>
-              <button id="modeIsolate" type="button" class="active">Isolate X mode</button>
-            </div>
-
-            <div class="trial-controls" id="trialControls">
-              <label for="xSlider">x value:</label>
-              <input id="xSlider" type="range" step="0.1" />
-              <span id="xSliderValue"></span>
-            </div>
-
             <div class="swipe-wrap">
               <div class="swipe-track" id="swipeTrack" aria-label="Relation state slider">
                 <div class="track-line"></div>
@@ -397,15 +390,29 @@
                 <div class="swipe-thumb" id="swipeThumb">=</div>
               </div>
             </div>
+            <button id="buildBtn" class="primary">Build</button>
+            <button id="restoreBtn" type="button">Restore expression</button>
+            <div class="mode-switch" role="tablist" aria-label="Mode switch">
+              <button id="modeTrial" type="button">Trial & Error mode</button>
+              <button id="modeIsolate" type="button" class="active">Isolate X mode</button>
+            </div>
           </div>
 
-          <div class="op-row" id="opRow">
-            <button class="opBtn" data-kind="constant" data-op="1">+1</button>
-            <button class="opBtn" data-kind="constant" data-op="5">+5</button>
-            <button class="opBtn" data-kind="constant" data-op="-1">-1</button>
-            <button class="opBtn" data-kind="constant" data-op="-5">-5</button>
-            <button class="opBtn" data-kind="x" data-op="1">+x</button>
-            <button class="opBtn" data-kind="x" data-op="-1">-x</button>
+          <div class="controls-swap">
+            <div class="trial-controls" id="trialControls">
+              <label for="xSlider">x value:</label>
+              <input id="xSlider" type="range" step="0.1" />
+              <span id="xSliderValue"></span>
+            </div>
+
+            <div class="op-row" id="opRow">
+              <button class="opBtn" data-kind="constant" data-op="1">+1</button>
+              <button class="opBtn" data-kind="constant" data-op="5">+5</button>
+              <button class="opBtn" data-kind="constant" data-op="-1">-1</button>
+              <button class="opBtn" data-kind="constant" data-op="-5">-5</button>
+              <button class="opBtn" data-kind="x" data-op="1">+x</button>
+              <button class="opBtn" data-kind="x" data-op="-1">-x</button>
+            </div>
           </div>
         </div>
       </div>
@@ -416,6 +423,7 @@
     const leftInput = document.getElementById('leftInput');
     const rightInput = document.getElementById('rightInput');
     const buildBtn = document.getElementById('buildBtn');
+    const restoreBtn = document.getElementById('restoreBtn');
     const leftItems = document.getElementById('leftItems');
     const rightItems = document.getElementById('rightItems');
     const leftGroup = document.getElementById('leftGroup');
@@ -442,6 +450,8 @@
       left: { x: 0, constant: 0 },
       right: { x: 0, constant: 0 },
       original: 'x + 3 = 8',
+      originalLeft: { x: 1, constant: 3 },
+      originalRight: { x: 0, constant: 8 },
       xTrial: 0,
       trialRange: { min: -10, max: 10 }
     };
@@ -588,6 +598,8 @@
         state.left = left;
         state.right = right;
         state.original = `${formatSide(left)} = ${formatSide(right)}`;
+        state.originalLeft = { ...left };
+        state.originalRight = { ...right };
         originalExpression.textContent = `Original: ${state.original}`;
         setTrialRange();
         render();
@@ -684,6 +696,14 @@
 
     modeTrial.addEventListener('click', () => setMode('trial'));
     modeIsolate.addEventListener('click', () => setMode('isolate'));
+    restoreBtn.addEventListener('click', () => {
+      state.left = { ...state.originalLeft };
+      state.right = { ...state.originalRight };
+      leftInput.value = formatSide(state.left);
+      rightInput.value = formatSide(state.right);
+      setTrialRange();
+      render();
+    });
 
     xSlider.addEventListener('input', () => {
       state.xTrial = parseFloat(xSlider.value);
