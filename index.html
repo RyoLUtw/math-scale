@@ -491,6 +491,7 @@
       original: 'x + 3 = 8',
       originalLeft: { x: 1, constant: 3 },
       originalRight: { x: 0, constant: 8 },
+      originalRelation: '=',
       xTrial: 0,
       trialRange: { min: -10, max: 10 },
       attemptsTried: 0
@@ -663,7 +664,8 @@
         validateLinearForm(left, right);
         state.left = left;
         state.right = right;
-        state.original = `${formatSide(left)} = ${formatSide(right)}`;
+        state.originalRelation = state.relation;
+        state.original = `${formatSide(left)} ${state.originalRelation} ${formatSide(right)}`;
         state.originalLeft = { ...left };
         state.originalRight = { ...right };
         originalExpression.textContent = `Original: ${state.original}`;
@@ -767,6 +769,7 @@
     restoreBtn.addEventListener('click', () => {
       state.left = { ...state.originalLeft };
       state.right = { ...state.originalRight };
+      state.relation = state.originalRelation;
       leftInput.value = formatSide(state.left);
       rightInput.value = formatSide(state.right);
       state.attemptsTried = 0;
