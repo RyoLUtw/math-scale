@@ -154,6 +154,27 @@
       padding-bottom: 12px;
     }
 
+    .items.stacked {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      justify-content: center;
+      flex-wrap: nowrap;
+    }
+
+    .stack-col {
+      min-width: 36px;
+      max-width: 44px;
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 8px;
+      border-radius: 10px;
+      border: 3px dashed #93c5fd;
+      background: rgba(219, 234, 254, 0.35);
+    }
+
     .item {
       width: 42px;
       height: 42px;
@@ -165,6 +186,43 @@
       color: white;
       box-shadow: 0 5px 10px rgba(0,0,0,0.12);
       animation: popIn 0.25s ease;
+    }
+
+    .item.partial {
+      position: relative;
+      overflow: hidden;
+      color: #7c2d12;
+      border: 2px solid #b45309;
+      background: linear-gradient(
+        to top,
+        rgba(245, 158, 11, 0.95) 0%,
+        rgba(245, 158, 11, 0.95) calc(var(--fill-ratio, 0.5) * 100%),
+        rgba(245, 158, 11, 0.12) calc(var(--fill-ratio, 0.5) * 100%),
+        rgba(245, 158, 11, 0.12) 100%
+      );
+    }
+
+    .item.partial::after {
+      content: attr(data-fraction);
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: #7c2d12;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .item.partial.negative {
+      background: linear-gradient(
+        to top,
+        rgba(251, 146, 60, 0.45) 0%,
+        rgba(251, 146, 60, 0.45) calc(var(--fill-ratio, 0.5) * 100%),
+        rgba(255, 255, 255, 0.9) calc(var(--fill-ratio, 0.5) * 100%),
+        rgba(255, 255, 255, 0.9) 100%
+      );
     }
 
     .weight { background: var(--weight); }
@@ -222,6 +280,18 @@
       gap: 12px;
       justify-items: center;
       z-index: 3;
+    }
+
+    .current-expression {
+      margin: 0;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid #bfdbfe;
+      background: rgba(239, 246, 255, 0.8);
+      color: #1d4ed8;
+      font-weight: 700;
+      font-size: 0.92rem;
+      text-align: center;
     }
 
     .swipe-wrap {
@@ -420,6 +490,8 @@
               </div>
             </div>
             <button id="buildBtn" class="primary">Build</button>
+            <button id="restoreBtn">Restore expression</button>
+            <p class="current-expression" id="currentExpression">Currently solving: (build an expression)</p>
           </div>
 
           <div class="op-row">
@@ -429,6 +501,7 @@
             <button class="opBtn" data-kind="constant" data-op="-5">-5</button>
             <button class="opBtn" data-kind="x" data-op="1">+x</button>
             <button class="opBtn" data-kind="x" data-op="-1">-x</button>
+            <button class="opBtn" data-kind="divide-x">÷ number of x</button>
           </div>
 
           <div class="statement" id="statementLine"></div>
@@ -449,6 +522,8 @@
     const stateAura = document.getElementById('stateAura');
     const swipeTrack = document.getElementById('swipeTrack');
     const swipeThumb = document.getElementById('swipeThumb');
+    const restoreBtn = document.getElementById('restoreBtn');
+    const currentExpression = document.getElementById('currentExpression');
 
     const relationOrder = ['<', '=', '>'];
     const relationStops = { '<': 26, '=': 100, '>': 174 };
@@ -457,7 +532,9 @@
     const state = {
       relation: '=',
       left: { x: 0, constant: 0 },
-      right: { x: 0, constant: 0 }
+      right: { x: 0, constant: 0 },
+      divideView: null,
+      builtState: null
     };
 
     function parseSide(sideStr) {
@@ -544,14 +621,22 @@
       stateAura.className = `state-aura ${auraClass}`;
     }
 
-    function makeItem(className, label, isNegative = false) {
+    function makeItem(className, label, isNegative = false, fractionLabel = '', fractionRatio = null) {
       const div = document.createElement('div');
       div.className = `item ${className}${isNegative ? ' negative' : ''}`;
       div.textContent = label;
+      if (fractionLabel) {
+        div.classList.add('partial');
+        div.dataset.fraction = fractionLabel;
+        if (fractionRatio !== null) {
+          div.style.setProperty('--fill-ratio', `${Math.max(0, Math.min(1, fractionRatio))}`);
+        }
+      }
       return div;
     }
 
     function renderSideItems(container, side) {
+      container.classList.remove('stacked');
       container.innerHTML = '';
 
       const xCount = Math.abs(side.x);
@@ -566,6 +651,42 @@
       }
     }
 
+    function reduceFraction(numerator, denominator) {
+      const gcd = (a, b) => b === 0 ? Math.abs(a) : gcd(b, a % b);
+      const factor = gcd(numerator, denominator) || 1;
+      return { numerator: numerator / factor, denominator: denominator / factor };
+    }
+
+    function renderStackedDivision(container, n, sideConstant) {
+      container.innerHTML = '';
+      container.classList.add('stacked');
+
+      const isNegative = sideConstant < 0;
+      const absTotal = Math.abs(sideConstant);
+      const wholePerStack = Math.floor(absTotal / n);
+      const remainder = absTotal % n;
+
+      for (let stackIndex = 0; stackIndex < n; stackIndex++) {
+        const stack = document.createElement('div');
+        stack.className = 'stack-col';
+
+        for (let i = 0; i < wholePerStack; i++) {
+          stack.appendChild(makeItem('weight', isNegative ? '-1' : '1', isNegative));
+        }
+
+        if (remainder > 0) {
+          const frac = reduceFraction(remainder, n);
+          const fillRatio = remainder / n;
+          const fractionLabel = `${isNegative ? '-' : ''}${frac.numerator}/${frac.denominator}`;
+          stack.appendChild(
+            makeItem('weight', '', isNegative, fractionLabel, fillRatio)
+          );
+        }
+
+        container.appendChild(stack);
+      }
+    }
+
     function updateThumb() {
       swipeThumb.style.top = `${relationStops[state.relation]}px`;
       swipeThumb.textContent = state.relation;
@@ -573,12 +694,36 @@
 
     function updateStatus() {
       const actual = actualComparison();
+      currentExpression.textContent = `Currently solving: ${formatSide(state.left)} ${state.relation} ${formatSide(state.right)}`;
+      if (state.divideView) {
+        const note = state.divideView.nonWhole
+          ? `split into ${state.divideView.n} stacks: each x corresponds to ${state.divideView.perStackLabel} (fraction shown as partial block)`
+          : `split into ${state.divideView.n} equal stacks: each x corresponds to ${state.divideView.perStackLabel}`;
+        statementLine.textContent = `${formatSide(state.left)} ${state.relation} ${formatSide(state.right)} (${note}; actual mass comparison: ${actual})`;
+        return;
+      }
       statementLine.textContent = `${formatSide(state.left)} ${state.relation} ${formatSide(state.right)} (actual mass comparison: ${actual})`;
     }
 
+    function saveBuiltState() {
+      state.builtState = {
+        relation: state.relation,
+        left: { ...state.left },
+        right: { ...state.right }
+      };
+    }
+
     function render() {
-      renderSideItems(leftItems, state.left);
-      renderSideItems(rightItems, state.right);
+      if (state.divideView) {
+        const xContainer = state.divideView.xSide === 'left' ? leftItems : rightItems;
+        const otherContainer = state.divideView.xSide === 'left' ? rightItems : leftItems;
+        const xSideState = state.divideView.xSide === 'left' ? state.left : state.right;
+        renderSideItems(xContainer, xSideState);
+        renderStackedDivision(otherContainer, state.divideView.n, state.divideView.otherConstant);
+      } else {
+        renderSideItems(leftItems, state.left);
+        renderSideItems(rightItems, state.right);
+      }
       updateThumb();
       updateGroups();
       updateStatus();
@@ -588,13 +733,31 @@
       try {
         state.left = parseSide(leftInput.value);
         state.right = parseSide(rightInput.value);
+        state.divideView = null;
+        saveBuiltState();
         render();
       } catch (err) {
         alert(err.message);
       }
     }
 
+    function restoreBuiltExpression() {
+      if (!state.builtState) {
+        alert('Build an expression first, then you can restore it.');
+        return;
+      }
+
+      state.left = { ...state.builtState.left };
+      state.right = { ...state.builtState.right };
+      state.relation = state.builtState.relation;
+      state.divideView = null;
+      leftInput.value = formatSide(state.left);
+      rightInput.value = formatSide(state.right);
+      render();
+    }
+
     function applyConstantAddSubtract(amount) {
+      state.divideView = null;
       state.left.constant += amount;
       state.right.constant += amount;
       leftInput.value = formatSide(state.left);
@@ -603,6 +766,7 @@
     }
 
     function applyXAddSubtract(amount) {
+      state.divideView = null;
       state.left.x += amount;
       state.right.x += amount;
       leftInput.value = formatSide(state.left);
@@ -612,6 +776,35 @@
 
     function setRelation(relation) {
       state.relation = relation;
+      render();
+    }
+
+    function applyDivideByNumberOfX() {
+      let xSide = null;
+      if (Math.abs(state.left.x) > 1 && state.right.x === 0) xSide = 'left';
+      else if (Math.abs(state.right.x) > 1 && state.left.x === 0) xSide = 'right';
+
+      if (!xSide) {
+        alert('Use this when one side has n·x (n > 1) and the opposite side has no x terms.');
+        return;
+      }
+
+      const n = Math.abs(xSide === 'left' ? state.left.x : state.right.x);
+      const otherConstant = xSide === 'left' ? state.right.constant : state.left.constant;
+      const perStack = otherConstant / n;
+      const frac = reduceFraction(Math.abs(otherConstant), n);
+      const sign = perStack < 0 ? '-' : '';
+      const perStackLabel = Number.isInteger(perStack)
+        ? `${perStack}`
+        : `${sign}${frac.numerator}/${frac.denominator}`;
+
+      state.divideView = {
+        xSide,
+        n,
+        otherConstant,
+        perStackLabel,
+        nonWhole: !Number.isInteger(perStack)
+      };
       render();
     }
 
@@ -652,13 +845,16 @@
     }
 
     buildBtn.addEventListener('click', buildFromInputs);
+    restoreBtn.addEventListener('click', restoreBuiltExpression);
     leftInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') buildFromInputs(); });
     rightInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') buildFromInputs(); });
 
     document.querySelectorAll('.opBtn').forEach(btn => {
       btn.addEventListener('click', () => {
         const amount = parseInt(btn.dataset.op, 10);
-        if (btn.dataset.kind === 'x') {
+        if (btn.dataset.kind === 'divide-x') {
+          applyDivideByNumberOfX();
+        } else if (btn.dataset.kind === 'x') {
           applyXAddSubtract(amount);
         } else {
           applyConstantAddSubtract(amount);
