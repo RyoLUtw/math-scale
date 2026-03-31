@@ -585,7 +585,10 @@
 
     function renderSideItems(container, side) {
       container.innerHTML = '';
-      for (let i = 0; i < Math.abs(side.x); i++) container.appendChild(makeItem('xbox', side.x >= 0 ? 'x' : '-x', side.x < 0));
+      const xLabel = state.mode === 'trial'
+        ? `x=${Number(state.xTrial).toFixed(1)}`
+        : (side.x >= 0 ? 'x' : '-x');
+      for (let i = 0; i < Math.abs(side.x); i++) container.appendChild(makeItem('xbox', xLabel, side.x < 0));
       for (let i = 0; i < Math.abs(side.constant); i++) container.appendChild(makeItem('weight', side.constant >= 0 ? '1' : '-1', side.constant < 0));
     }
 
@@ -630,6 +633,10 @@
       xSlider.value = state.xTrial;
       xDirectInput.value = Number(state.xTrial).toFixed(1);
       render();
+    }
+
+    function commitDirectXInput() {
+      setTrialX(parseFloat(xDirectInput.value));
     }
 
     function syncTrialRelation() {
@@ -771,8 +778,9 @@
       setTrialX(parseFloat(xSlider.value));
     });
 
-    xDirectInput.addEventListener('input', () => {
-      setTrialX(parseFloat(xDirectInput.value));
+    xDirectInput.addEventListener('change', commitDirectXInput);
+    xDirectInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') commitDirectXInput();
     });
 
     swipeThumb.addEventListener('mousedown', startDrag);
