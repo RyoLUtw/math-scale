@@ -90,6 +90,22 @@
       white-space: nowrap;
     }
 
+    .current-expression-pill {
+      position: absolute;
+      left: 50%;
+      top: 388px;
+      transform: translate(-50%, -50%);
+      border: 1px solid #c7d2fe;
+      border-radius: 999px;
+      padding: 8px 14px;
+      background: #eef2ff;
+      box-shadow: 0 6px 12px rgba(31, 41, 55, 0.08);
+      color: #1e3a8a;
+      font-weight: 700;
+      z-index: 3;
+      white-space: nowrap;
+    }
+
     .platform-group {
       position: absolute;
       width: 320px;
@@ -240,6 +256,23 @@
 
     .trial-controls.show { display: flex; }
 
+    .x-direct {
+      width: 88px;
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+
+    .attempts-count {
+      font-weight: 700;
+      color: #1e3a8a;
+      background: #eff6ff;
+      border-radius: 999px;
+      padding: 4px 10px;
+      border: 1px solid #bfdbfe;
+    }
+
     .swipe-wrap {
       display: flex;
       justify-content: center;
@@ -363,6 +396,7 @@
           <div class="state-aura equal" id="stateAura"></div>
 
           <div class="original-expression" id="originalExpression">Original: x + 3 = 8</div>
+          <div class="current-expression-pill" id="currentExpressionPill">Currently solving: x + 3 = 8</div>
 
           <div class="platform-group left equal" id="leftGroup">
             <div class="items" id="leftItems"></div>
@@ -402,7 +436,9 @@
             <div class="trial-controls" id="trialControls">
               <label for="xSlider">x value:</label>
               <input id="xSlider" type="range" step="0.1" />
+              <input id="xDirectInput" class="x-direct" type="number" step="0.1" aria-label="Direct x value input" />
               <span id="xSliderValue"></span>
+              <span class="attempts-count" id="attemptsCount">Attempts tried: 0</span>
             </div>
 
             <div class="op-row" id="opRow">
@@ -435,9 +471,12 @@
     const modeIsolate = document.getElementById('modeIsolate');
     const trialControls = document.getElementById('trialControls');
     const xSlider = document.getElementById('xSlider');
+    const xDirectInput = document.getElementById('xDirectInput');
     const xSliderValue = document.getElementById('xSliderValue');
+    const attemptsCount = document.getElementById('attemptsCount');
     const opRow = document.getElementById('opRow');
     const originalExpression = document.getElementById('originalExpression');
+    const currentExpressionPill = document.getElementById('currentExpressionPill');
 
     const relationOrder = ['<', '=', '>'];
     const relationStops = { '<': 26, '=': 100, '>': 174 };
@@ -452,8 +491,10 @@
       original: 'x + 3 = 8',
       originalLeft: { x: 1, constant: 3 },
       originalRight: { x: 0, constant: 8 },
+      originalRelation: '=',
       xTrial: 0,
-      trialRange: { min: -10, max: 10 }
+      trialRange: { min: -10, max: 10 },
+      attemptsTried: 0
     };
 
     function parseSide(sideStr) {
@@ -545,7 +586,10 @@
 
     function renderSideItems(container, side) {
       container.innerHTML = '';
-      for (let i = 0; i < Math.abs(side.x); i++) container.appendChild(makeItem('xbox', side.x >= 0 ? 'x' : '-x', side.x < 0));
+      const xLabel = state.mode === 'trial'
+        ? `x=${Number(state.xTrial).toFixed(1)}`
+        : (side.x >= 0 ? 'x' : '-x');
+      for (let i = 0; i < Math.abs(side.x); i++) container.appendChild(makeItem('xbox', xLabel, side.x < 0));
       for (let i = 0; i < Math.abs(side.constant); i++) container.appendChild(makeItem('weight', side.constant >= 0 ? '1' : '-1', side.constant < 0));
     }
 
@@ -564,15 +608,37 @@
       const xSol = solutionX();
       if (xSol === null || !Number.isFinite(xSol)) {
         state.trialRange = { min: -10, max: 10 };
-        state.xTrial = 0;
+        state.xTrial = state.trialRange.min;
       } else {
         state.trialRange = { min: xSol - 10, max: xSol + 10 };
-        state.xTrial = xSol;
+        state.xTrial = state.trialRange.min;
       }
       xSlider.min = state.trialRange.min;
       xSlider.max = state.trialRange.max;
       xSlider.value = state.xTrial;
+      xDirectInput.min = state.trialRange.min;
+      xDirectInput.max = state.trialRange.max;
+      xDirectInput.value = state.xTrial;
       xSliderValue.textContent = Number(state.xTrial).toFixed(1);
+    }
+
+    function updateCurrentExpressionPill() {
+      currentExpressionPill.style.display = state.mode === 'trial' ? 'none' : 'block';
+      currentExpressionPill.textContent = `Currently solving: ${formatSide(state.left)} ${state.relation} ${formatSide(state.right)}`;
+    }
+
+    function setTrialX(nextX) {
+      const clamped = Math.max(state.trialRange.min, Math.min(state.trialRange.max, nextX));
+      if (!Number.isFinite(clamped)) return;
+      if (Math.abs(clamped - state.xTrial) > 0.0001) state.attemptsTried += 1;
+      state.xTrial = clamped;
+      xSlider.value = state.xTrial;
+      xDirectInput.value = Number(state.xTrial).toFixed(1);
+      render();
+    }
+
+    function commitDirectXInput() {
+      setTrialX(parseFloat(xDirectInput.value));
     }
 
     function syncTrialRelation() {
@@ -588,6 +654,8 @@
       updateThumb();
       updateGroups();
       xSliderValue.textContent = Number(state.xTrial).toFixed(1);
+      attemptsCount.textContent = `Attempts tried: ${state.attemptsTried}`;
+      updateCurrentExpressionPill();
     }
 
     function buildFromInputs() {
@@ -597,10 +665,12 @@
         validateLinearForm(left, right);
         state.left = left;
         state.right = right;
-        state.original = `${formatSide(left)} = ${formatSide(right)}`;
+        state.originalRelation = state.relation;
+        state.original = `${formatSide(left)} ${state.originalRelation} ${formatSide(right)}`;
         state.originalLeft = { ...left };
         state.originalRight = { ...right };
         originalExpression.textContent = `Original: ${state.original}`;
+        state.attemptsTried = 0;
         setTrialRange();
         render();
       } catch (err) {
@@ -648,6 +718,7 @@
       opRow.style.display = mode === 'trial' ? 'none' : 'flex';
       swipeThumb.style.cursor = mode === 'trial' ? 'default' : 'grab';
       if (mode === 'trial') {
+        state.attemptsTried = 0;
         setTrialRange();
       }
       render();
@@ -699,15 +770,21 @@
     restoreBtn.addEventListener('click', () => {
       state.left = { ...state.originalLeft };
       state.right = { ...state.originalRight };
+      state.relation = state.originalRelation;
       leftInput.value = formatSide(state.left);
       rightInput.value = formatSide(state.right);
+      state.attemptsTried = 0;
       setTrialRange();
       render();
     });
 
     xSlider.addEventListener('input', () => {
-      state.xTrial = parseFloat(xSlider.value);
-      render();
+      setTrialX(parseFloat(xSlider.value));
+    });
+
+    xDirectInput.addEventListener('change', commitDirectXInput);
+    xDirectInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') commitDirectXInput();
     });
 
     swipeThumb.addEventListener('mousedown', startDrag);
